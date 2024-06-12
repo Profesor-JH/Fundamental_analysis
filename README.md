@@ -1,5 +1,40 @@
 # Fundamental Analysis App
-Fundamental analysis with ease.
+
+**Description:** Developed a Streamlit-based web application to facilitate the fundamental analysis of companies by retrieving and displaying key financial metrics from a MySQL database.
+
+**Watch a demo here:** https://www.youtube.com/watch?v=BNG80OXCPI0
+
+# Technologies Used:
+
+**Frontend:** Streamlit for creating the user interface and enabling interactive data filtering.
+**Backend:** Python for data processing and handling business logic.
+**Database:** MySQL for storing and querying company data.
+**Configuration:** YAML for securely managing database credentials.
+**Data Handling:** Pandas for data manipulation and display.
+
+# Key Features:
+
+**Dynamic Filtering:** Implemented multi-select dropdowns for filtering companies based on Ticker, Company, Sector, Industry, and Country.
+**Data Visualization:** Designed a detailed breakdown of fundamental grades with color-coded ratings to enhance readability and user experience.
+**Database Integration:** Established secure connections to MySQL database using credentials stored in a YAML configuration file.
+**Legend Interpretation:** Integrated a visual legend to interpret grading scales, including color-coded ratings and descriptive icons.
+
+# Responsibilities:
+
+**Database Design and Management:** Structured and maintained a MySQL database to store and efficiently query fundamental analysis data.
+**Application Development:** Built and deployed a user-friendly Streamlit application to display financial data.
+**Data Processing:** Utilized Pandas for data manipulation, including filtering, aggregation, and formatting.
+**User Interface Design:** Created an intuitive sidebar for user inputs and dynamic filtering, ensuring a seamless user experience.
+**Security:** Implemented best practices for securing database connections and handling sensitive information.
+
+# Impact:
+
+**Efficiency:** Enabled users to quickly filter and analyze companies based on multiple criteria, significantly reducing the time required for fundamental analysis.
+
+**User Experience:** Enhanced data presentation through color-coded grades and a clear legend, making it easier for users to interpret and compare financial metrics.
+
+**Scalability:** Designed a scalable architecture that can be extended to include additional financial metrics and data sources in the future.
+
 
 # Project Structure
 ```
@@ -52,30 +87,6 @@ streamlit run app.py
 2. Apply Selection: Click on "Apply Selection" to update the filter options dynamically based on selected criteria.
 3. Run Analysis: Click on "Run Analysis" to fetch and display the data based on the selected filters.
 4. Reset Selections: Click on "Reset Selections" to clear all filters.
-
-
-# Example
-## Fundamental Analysis by Rating
-The app includes a legend to interpret the grading scale:
-
-``` 
-<div style='border: 0.6px solid white; padding: 20px; margin: 5px; margin-right: -170px;'>
-  <div style='display:flex; justify-content:space-between; font-size: small;'>
-    <div style='margin-right: 40px; text-align: center;'>❌<br><span style='color:#FF6347; font-size: x-large;'>D-</span><br><span style='font-size: x-small;'>Poor</span></div>
-    <div style='margin-right: 40px; text-align: center;'>⚠️<br><span style='color:#FFA07A; font-size: x-large;'>D</span><br><span style='font-size: x-small;'>Below Average</span></div>
-    <div style='margin-right: 40px; text-align: center;'>🟡<br><span style='color:#FFD700; font-size: x-large;'>D+</span><br><span style='font-size: x-small;'>Average</span></div>
-    <div style='margin-right: 40px; text-align: center;'>🟡<br><span style='color:#FFD700; font-size: x-large;'>C-</span><br><span style='font-size: x-small;'>Average</span></div>
-    <div style='margin-right: 40px; text-align: center;'>✔️<br><span style='color:#ADFF2F; font-size: x-large;'>C</span><br><span style='font-size: x-small;'>Above Average</span></div>
-    <div style='margin-right: 40px; text-align: center;'>✅<br><span style='color:#32CD32; font-size: x-large;'>C+</span><br><span style='font-size: x-small;'>Good</span></div>
-    <div style='margin-right: 40px; text-align: center;'>✅<br><span style='color:#32CD32; font-size: x-large;'>B-</span><br><span style='font-size: x-small;'>Good</span></div>
-    <div style='margin-right: 40px; text-align: center;'>💯<br><span style='color:#00BFFF; font-size: x-large;'>B</span><br><span style='font-size: x-small;'>Very Good</span></div>
-    <div style='margin-right: 40px; text-align: center;'>💫<br><span style='color:#1E90FF; font-size: x-large;'>B+</span><br><span style='font-size: x-small;'>Excellent</span></div>
-    <div style='margin-right: 40px; text-align: center;'>💫<br><span style='color:#1E90FF; font-size: x-large;'>A-</span><br><span style='font-size: x-small;'>Excellent</span></div>
-    <div style='margin-right: 40px; text-align: center;'>🚀<br><span style='color:#9400D3; font-size: x-large;'>A</span><br><span style='font-size: x-small;'>Outstanding</span></div>
-    <div style='margin-right: 40px; text-align: center;'>🌟<br><span style='color:#8A2BE2; font-size: x-large;'>A+</span><br><span style='font-size: x-small;'>Exceptional</span></div>
-  </div>
-</div>
-```
 
 # License
 This project is licensed under the MIT License - see the LICENSE file for details.
