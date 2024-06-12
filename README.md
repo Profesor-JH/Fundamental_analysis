@@ -7,24 +7,35 @@
 # Technologies Used:
 
 **Frontend:** Streamlit for creating the user interface and enabling interactive data filtering.
+
 **Backend:** Python for data processing and handling business logic.
+
 **Database:** MySQL for storing and querying company data.
+
 **Configuration:** YAML for securely managing database credentials.
+
 **Data Handling:** Pandas for data manipulation and display.
 
 # Key Features:
 
 **Dynamic Filtering:** Implemented multi-select dropdowns for filtering companies based on Ticker, Company, Sector, Industry, and Country.
+
 **Data Visualization:** Designed a detailed breakdown of fundamental grades with color-coded ratings to enhance readability and user experience.
+
 **Database Integration:** Established secure connections to MySQL database using credentials stored in a YAML configuration file.
+
 **Legend Interpretation:** Integrated a visual legend to interpret grading scales, including color-coded ratings and descriptive icons.
 
 # Responsibilities:
 
 **Database Design and Management:** Structured and maintained a MySQL database to store and efficiently query fundamental analysis data.
+
 **Application Development:** Built and deployed a user-friendly Streamlit application to display financial data.
+
 **Data Processing:** Utilized Pandas for data manipulation, including filtering, aggregation, and formatting.
+
 **User Interface Design:** Created an intuitive sidebar for user inputs and dynamic filtering, ensuring a seamless user experience.
+
 **Security:** Implemented best practices for securing database connections and handling sensitive information.
 
 # Impact:
