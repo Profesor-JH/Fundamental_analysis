@@ -2,6 +2,7 @@ import streamlit as st
 import mysql.connector
 import yaml
 import pandas as pd
+import base64
 
 # Read the configuration file
 with open("config.yaml", 'r') as stream:
@@ -27,8 +28,6 @@ inputs = {
 
 def get_distinct_values(column_name, table_name, selected_values):
     cursor = connection.cursor()
-
-    # Join statements for tables that need to be joined
     joins = {
         "Ticker": ["Dimension_Company", "b", "ON a.Ticker = b.Ticker"],
         "Company": ["Dimension_Company", "c", "ON a.Ticker = c.Ticker"],
@@ -38,57 +37,41 @@ def get_distinct_values(column_name, table_name, selected_values):
     }
 
     query = f"SELECT DISTINCT a.`{column_name}` FROM `{table_name}` a"
-
-    # Add conditions based on selected values
     conditions = []
     for column, value in selected_values.items():
-        #print(f"the current selected values are {selected_values}")
         if column in joins:
             join_table, alias, join_condition = joins[column]
-            # Construct the query with the join
             query += f" JOIN {join_table} {alias} {join_condition}"
             if value is not None and value != [] and value != "None":
                 if isinstance(value, str):
-                    # Quote string values
                     conditions.append(f"{alias}.{column} = '{value}'")
                 else:
                     if None in value:
-                        # Handle None values
                         conditions.append(f"{alias}.{column} IS NULL")
                     else:
-                        # Quote each value in the list
                         quoted_values = ",".join([f"'{v}'" for v in value])
                         conditions.append(f"{alias}.{column} IN ({quoted_values})")
         else:
-            # For inputs without joins, add conditions directly on the main table
             if value is not None and value != [] and value != "None":
                 if isinstance(value, str):
-                    # Quote string values
                     conditions.append(f"a.{column_name} = '{value}'")
                 else:
                     if None in value:
-                        # Handle None values
                         conditions.append(f"a.{column_name} IS NULL")
                     else:
-                        # Quote each value in the list
                         quoted_values = ",".join([f"'{v}'" for v in value])
                         conditions.append(f"a.{column_name} IN ({quoted_values})")
-
-    # Add WHERE clause if there are conditions
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
-    print(query)
     cursor.execute(query)
     distinct_values = [row[0] for row in cursor.fetchall()]
     cursor.close()
     return distinct_values
 
-
-
 def fetch_data(connection, company=None, sector=None, industry=None, country=None):
     cursor = connection.cursor()
     query = """
-        SELECT a.Date as Analysis_Date,Company,Sector, Industry, Country,a.Valuation_Grade,
+        SELECT a.Date as Analysis_Date, Company, Sector, Industry, Country, a.Valuation_Grade,
         a.Profitability_Grade, a.Growth_Grade, a.Performance_Grade, a.Overall_Rating
         FROM Fundamental_Profiling a
         JOIN Dimension_Company ON a.Ticker = Dimension_Company.Ticker
@@ -98,7 +81,6 @@ def fetch_data(connection, company=None, sector=None, industry=None, country=Non
         WHERE 1=1
     """
     params = []
-
     if company is not None and company != []:
         query += " AND Dimension_Company.Company IN (" + ",".join(["%s"] * len(company)) + ")"
         params.extend(company)
@@ -111,54 +93,143 @@ def fetch_data(connection, company=None, sector=None, industry=None, country=Non
     if country is not None and country != []:
         query += " AND Dimension_Country.Country IN (" + ",".join(["%s"] * len(country)) + ")"
         params.extend(country)
-    
     cursor.execute(query, params)
     data = cursor.fetchall()
+    cursor.close()
     return data
 
-# Define main function
 def main():
+    @st.cache_data
+    def get_base64_of_bin_file(bin_file):
+        with open(bin_file, 'rb') as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
 
-    # Define the name of the app and a brief description
-    app_name = "QuantSniper - Vision noc"
-    app_description = "Fundamental analysis with ease."
+    def set_png_as_page_bg(png_file1, png_file2):
+        bin_str1 = get_base64_of_bin_file(png_file1)
+        bin_str2 = get_base64_of_bin_file(png_file2)
+        page_bg_img = f'''
+        <style>
+        [data-testid="stAppViewContainer"] {{
+            background-image: url("data:image/png;base64,{bin_str1}");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: white;
+        }}
+        [data-testid="stSidebar"] {{
+            background-image: url("data:image/png;base64,{bin_str2}");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: white;
+        }}
+        </style>
+        '''
+        st.markdown(page_bg_img, unsafe_allow_html=True)
 
-    # Define the legend for the grading scale with descriptions and corresponding colors
+    set_png_as_page_bg("Quant_5.png", "Quant_5.png")
+
+    app_name = "S.n.i.p.e.r"
+
+    # Gradient colors from red to green
     legend = {
-        "D-": ("Poor", "#FF6347", '❌'),  # Red cross mark for lowest grade
-        "D": ("Below Average", "#FFA07A", '⚠️'),  # Warning icon for low grade
-        "D+": ("Average", "#FFD700", '🟡'),  # Yellow circle for average grade
-        "C-": ("Average", "#FFD700", '🟡'),  # Yellow circle for average grade
-        "C": ("Above Average", "#ADFF2F", '✔️'),  # Checkmark for above average grade
-        "C+": ("Good", "#32CD32", '✅'),  # Green checkmark for good grade
-        "B-": ("Good", "#32CD32", '✅'),  # Green checkmark for good grade
-        "B": ("Very Good", "#00BFFF", '💯'),  # Hundred points icon for very good grade
-        "B+": ("Excellent", "#1E90FF", '💫'),  # Shooting star for excellent grade
-        "A-": ("Excellent", "#1E90FF", '💫'),  # Shooting star for excellent grade
-        "A": ("Outstanding", "#9400D3", '🚀'),  # Rocket icon for outstanding grade
-        "A+": ("Exceptional", "#8A2BE2", '🌟')  # Star icon for exceptional grade
+        "D-": ("Poor", "#FF0000"),
+        "D": ("Below Average", "#FF4500"),
+        "D+": ("Average", "#FFA500"),
+        "C-": ("Average", "#FFD700"),
+        "C": ("Above Average", "#ADFF2F"),
+        "C+": ("Good", "#7FFF00"),
+        "B-": ("Good", "#32CD32"),
+        "B": ("Very Good", "#00FF00"),
+        "B+": ("Excellent", "#00FA9A"),
+        "A-": ("Excellent", "#00CED1"),
+        "A": ("Outstanding", "#1E90FF"),
+        "A+": ("Exceptional", "#9400D3")
     }
 
-    # Display the legend horizontally with color-coded text
-    st.subheader("Fundamental Analysis by Rating")
-    legend_html = "<div style='border: 0.6px solid white; padding: 20px; margin: 5px; margin-right: -170px;'>"
-    legend_html += "<div style='display:flex; justify-content:space-between; font-size: small;'>"
-    for grade, (description, color, icon)  in legend.items():
-        legend_html += f"<div style='margin-right: 40px; text-align: center;'>{icon}<br><span style='color:{color}; font-size: x-large;'>{grade}</span><br><span style='font-size: x-small;'>{description}</span></div>"
+    st.markdown(f"<h1 style='font-family: Georgia, serif; color: white;'>{app_name}</h1>", unsafe_allow_html=True)
+
+
+    legend_html = "<div style='border: 0.6px solid black; padding: 20px; margin: 5px 0; margin-right: -170px;border-radius: 10px; background: linear-gradient(to right, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.1)); width: 200%;'>"
+    legend_html += "<div style='display:flex; justify-content:space-between; font-size: medium; font-weight: bold; color: black;'>"
+
+    for grade, (description, color) in legend.items():
+        legend_html += f"<div style='margin-right: 40px; text-align: center;'><br><span style='color:{color}; font-size: x-large;'>{grade}</span><br><span style='color: {color};font-size: x-medium;font-weight: bold'>{description}</span></div>"
+
+    
     legend_html += "</div>"
     legend_html += "</div>"
     st.markdown(legend_html, unsafe_allow_html=True)
+    # Custom CSS for sidebar width and styling
+    st.markdown(
+        """
+        <style>
+        [data-testid="stSidebar"] {
+            min-width: 300px;
+            max-width: 300px;
+            background-color: #4CAF50; /* Sidebar background color */
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1));
+            color: white; /* Text color */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Style for sidebar buttons */
+        [data-testid="stSidebar"] button {
+            background-color: #008CBA; /* Button background color */
+            color: white; /* Button text color */
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Hover effect for sidebar buttons */
+        [data-testid="stSidebar"] button:hover {
+            background-color: #005266; /* Darker background color on hover */
+        }
+
+        /* Style for custom buttons */
+        [data-testid="custom-button"] {
+            background-color: #8A2BE2; /* Luxurious purple background */
+            color: white; /* Button text color */
+            border: none;
+            padding: 12px 24px; /* Larger padding for a luxurious feel */
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 18px; /* Larger font size for a luxurious feel */
+            margin: 6px 3px;
+            cursor: pointer;
+            border-radius: 8px; /* More rounded corners for a luxurious feel */
+            transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition effects */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Add a shadow for a luxurious feel */
+        }
+
+        /* Hover effect for custom buttons */
+        [data-testid="custom-button"]:hover {
+            background-color: #5D3FD3; /* Darker luxurious purple on hover */
+            transform: translateY(-2px); /* Slight lift effect on hover */
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 
+    # Enhance sidebar texts
+    #st.sidebar.markdown(f"<h1 style='text-align: left; color: white; font-size: 36px;'>{app_name}</h1>", unsafe_allow_html=True)
+    #st.sidebar.markdown(f"<p style='text-align: left; font-size: 20px; color: white;'>Select criteria to filter the fundamental analysis data.</p>", unsafe_allow_html=True)
 
-
-
-    # Display the app name and description in the sidebar
-    st.sidebar.markdown(f"<h1 style='text-align: left; color: white; font-size: 36px;'>{app_name}</h1>", unsafe_allow_html=True)
-    st.sidebar.markdown(f"<p style='text-align: left; font-size: 20px; color: white;'>{app_description}</p>", unsafe_allow_html=True)
-    
-    # Define default values for inputs
     default_values = {
         "Ticker": [],
         "Company": [],
@@ -166,16 +237,15 @@ def main():
         "Industry": [],
         "Country": []
     }
-    
-    # Initialize selected values
+
     selected_values = {}
 
-    # Read user input for all inputs and update default_values
     for input_name, table_name in inputs.items():
         default_values[input_name] = st.sidebar.multiselect(f"Select {input_name}", get_distinct_values(input_name, table_name, default_values), key=f"{input_name}_multiselect")
 
+
     if st.sidebar.button("Apply Selection"):
-    # Render select inputs for user input
+        # Render select inputs for user input
         for input_name, table_name in inputs.items():
             selected_values[input_name] = st.session_state[f"{input_name}_multiselect"]
             # Make the select input reactive to changes in any other input
@@ -183,7 +253,7 @@ def main():
         for other_input_name in inputs.keys():
             if other_input_name != input_name:
                 selected_values[input_name] = st.session_state[f"{other_input_name}_multiselect"]
-
+        
     # Button to apply selections
     if st.sidebar.button("Run Analysis"):
         # Print the contents of default_values for debugging
@@ -216,18 +286,18 @@ def main():
 
         # Define the colors for each grade
         grade_colors = {
-            "D-": "#FF6347",  # Tomato
-            "D": "#FFA07A",   # LightSalmon
-            "D+": "#FFD700",  # Gold
+            "D-": "#FF0000",  # Tomato
+            "D": "FF4500",   # LightSalmon
+            "D+": "#FFA500",  # Gold
             "C-": "#FFD700",  # Gold
             "C": "#ADFF2F",   # GreenYellow
-            "C+": "#32CD32",  # LimeGreen
+            "C+": "#7FFF00",  # LimeGreen
             "B-": "#32CD32",  # LimeGreen
-            "B": "#00BFFF",   # DeepSkyBlue
-            "B+": "#1E90FF",  # DodgerBlue
-            "A-": "#1E90FF",  # DodgerBlue
-            "A": "#9400D3",   # DarkViolet
-            "A+": "#8A2BE2"   # BlueViolet
+            "B": "#00FF00",   # DeepSkyBlue
+            "B+": "#00FA9A",  # DodgerBlue
+            "A-": "#00CED1",  # DodgerBlue
+            "A": "#1E90FF",   # DarkViolet
+            "A+": "#9400D3"   # BlueViolet
         }
         # Function to apply color formatting to the grades
         def color_format(grade):
@@ -238,7 +308,6 @@ def main():
         for col in ['Valuation Grade', 'Profitability Grade', 'Growth Grade', 'Performance Grade']:
             out_put[col] = out_put[col].apply(lambda x: f"<span style='{color_format(x)}'>{x}</span>")
         
-
         # Apply conditional formatting with color bars
         color_map = {
             "0-50": "red",
@@ -259,24 +328,46 @@ def main():
         # Apply color bar formatting to the "Overall Rating" column
         styled_output = out_put.style.applymap(color_bar, subset=["Overall Rating"])
 
-        # Set CSS properties for table styling
-        table_styles = [
-            {'selector': 'th', 'props': [('font-weight', 'bold'), ('font-size', 'small')]},
-            {'selector': 'td', 'props': [('font-size', 'small')]},
-            {'selector': 'table', 'props': [('border', '1px solid white'), ('border-collapse', 'collapse'), ('margin-top', '30px')]}  # Add margin to the top of the table
 
-        ]
-        # Assuming 'Analysis Date' is the name of your date column
-        #out_put['Date'] = pd.to_datetime(out_put['Date'])
-        #out_put['Date'] = out_put['Date'].dt.strftime('%b-%d')  # Format date as Month Abbreviation - Day
-        # Reset index before converting to HTML
-        #out_put.reset_index(drop=True, inplace=True)
+        # Generate HTML for the styled output
+        styled_html = styled_output.to_html(escape=False, index=False)
 
-        # Apply table styling and display the output table
-        styled_output = styled_output.set_table_styles(table_styles)
-        st.write("\n")
-        st.write(styled_output.to_html(escape=False, index=False), unsafe_allow_html=True)
+        # Wrap HTML in a container div
+        table_html = f"""
+            <div class="table-container">
+                {styled_html}
+            </div>
+        """
 
+        # Display the HTML in Streamlit
+        st.markdown(table_html, unsafe_allow_html=True)
+
+        st.markdown(
+        """
+        <style>
+        .table-container {
+            width: 200%;
+            border: 1px solid black;
+            border-collapse: collapse;
+            margin-top: 30px;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1));
+        }
+        .table-container th {
+            font-weight: bold;
+            font-size: medium;
+            color: black
+        }
+        .table-container td {
+            font-size: medium;
+        }
+        .table-container tbody tr:hover {
+            background-color: #005266;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    
     # Button to reset selections
     if st.sidebar.button("Reset Selections"):
         default_values = {input_name: [] for input_name in inputs}
