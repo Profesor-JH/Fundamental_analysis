@@ -2,7 +2,7 @@
 
 **Description:** Developed a Streamlit-based web application to facilitate the fundamental analysis of companies by retrieving and displaying key financial metrics from a MySQL database.
 
-**Watch a demo here:** https://www.youtube.com/watch?v=BNG80OXCPI0
+**Watch a demo here:** https://youtu.be/co-J8sBKUto?si=IPpagbvXOFRwB_WX
 
 # Technologies Used:
 
